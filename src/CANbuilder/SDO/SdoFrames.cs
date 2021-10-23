@@ -44,79 +44,74 @@ namespace CANbuilder.Sdo
             return new SdoCommandFrame(data);
         }
 
-        private static ISdoFrame UploadLength(ObjectDictionaryIndex objectDictionaryIndex, int uploadInteger)
+        /// <summary>
+        /// Upload data to an CAN bus node. The creates at least one <see cref="SdoCommandFrame"/> and if the data
+        /// is larger than 4 bytes 1 or more <see cref="SdoDataFrame"/>.
+        /// </summary>
+        public static IEnumerable<ISdoFrame> Upload(ObjectDictionaryIndex objectDictionaryIndex, byte[] uploadData)
         {
-            // sending the length is done as not expedited whie sening an integer would be expedited
+            if (uploadData.Length > 4)
+            {
+                // first item contains the length of the sent data
+                yield return CreateUploadLengthCommandFrame(objectDictionaryIndex, uploadData.Length);
 
-            var sdoCommand = new SdoCommandByte().Upload().NumberOfDataBytes((byte)(4), expedited: false);
+                // following item contain the data only.
+                int startIndex = 0;
+                for (; startIndex < uploadData.Length - 8; startIndex += 8)
+                {
+                    yield return CreateDataFrame(uploadData.AsSpan(startIndex, 8));
+                }
+
+                if (startIndex < uploadData.Length)
+                {
+                    yield return CreateDataFrame(uploadData.AsSpan(startIndex, uploadData.Length - startIndex));
+                }
+
+                yield break;
+            }
+            else
+            {
+                yield return CreateCommandFrame(objectDictionaryIndex, uploadData.AsSpan());
+            }
+        }
+
+        private static SdoCommandFrame CreateCommandFrame(ObjectDictionaryIndex objectDictionaryIndex, ReadOnlySpan<byte> uploadData)
+        {
+            var sdoData = new byte[8];
+
+            sdoData[0] = new SdoCommandByte().Upload().NumberOfDataBytes((byte)(uploadData.Length), expedited: true).AsByte;
+            sdoData[1] = objectDictionaryIndex.IndexHighByte;
+            sdoData[2] = objectDictionaryIndex.IndexLowByte;
+            sdoData[3] = objectDictionaryIndex.SubIndex;
+
+            uploadData.CopyTo(sdoData.AsSpan(4, 4));
+
+            return new SdoCommandFrame(sdoData);
+        }
+
+        private static SdoCommandFrame CreateUploadLengthCommandFrame(ObjectDictionaryIndex objectDictionaryIndex, int uploadInteger)
+        {
+            // sending the length is done as not expedited while sending an integer would be expedited
 
             var sdoData = new byte[8];
-            sdoData[0] = sdoCommand.AsByte;
+
+            sdoData[0] = new SdoCommandByte().Upload().NumberOfDataBytes((byte)(4), expedited: false).AsByte;
             sdoData[1] = objectDictionaryIndex.IndexHighByte;
             sdoData[2] = objectDictionaryIndex.IndexLowByte;
             sdoData[3] = objectDictionaryIndex.SubIndex;
 
             IntAsBytes intAsBytes = new IntAsBytes { Int = uploadInteger };
 
-            Array.Copy(
-                sourceArray: new IntAsBytes { Int = uploadInteger }.AsByteArray,
-                sourceIndex: 0,
-                destinationArray: sdoData,
-                destinationIndex: 4,
-                length: 4);
+            intAsBytes.AsByteArray.AsSpan().CopyTo(sdoData.AsSpan(4, 4));
 
             return new SdoCommandFrame(sdoData);
         }
 
-        /// <summary>
-        /// Upload data to an CAN bus node. The creates at least one <see cref="SdoCommandFrame"/> and if the data
-        /// is larger than 4 bytes 1 oro more <see cref="SdoDataFrame"/>.
-        /// </summary>
-        public static IEnumerable<ISdoFrame> Upload(ObjectDictionaryIndex objectDictionaryIndex, byte[] uploadData)
-        {
-            var sdoCommand = new SdoCommandByte().Upload().NumberOfDataBytes((byte)(uploadData.Length), expedited: true);
-
-            if (uploadData.Length > 4)
-            {
-                // first item contains the length of the sent data
-                yield return UploadLength(objectDictionaryIndex, uploadData.Length);
-
-                int numberOfDataFrames = Math.DivRem(uploadData.Length, 8, out var bytesInLastFrame);
-
-                for (int frameNumber = 0; frameNumber < numberOfDataFrames; frameNumber++)
-                {
-                    yield return UploadDataFrame(frameNumber, uploadData, 8);
-                }
-
-                if (bytesInLastFrame > 0)
-                {
-                    yield return UploadDataFrame(numberOfDataFrames, uploadData, bytesInLastFrame);
-                }
-            }
-            else
-            {
-                var sdoData = new byte[8];
-                sdoData[0] = sdoCommand.AsByte;
-                sdoData[1] = objectDictionaryIndex.IndexHighByte;
-                sdoData[2] = objectDictionaryIndex.IndexLowByte;
-                sdoData[3] = objectDictionaryIndex.SubIndex;
-
-                Array.Copy(uploadData, sourceIndex: 0, sdoData, destinationIndex: 4, length: uploadData.Length);
-
-                yield return new SdoCommandFrame(sdoData);
-            }
-        }
-
-        private static SdoDataFrame UploadDataFrame(int frameNumber, byte[] uploadData, int numberOfBytes)
+        private static SdoDataFrame CreateDataFrame(ReadOnlySpan<byte> span)
         {
             var sdoData = new byte[8];
 
-            Array.Copy(
-                sourceArray: uploadData,
-                sourceIndex: 8 * frameNumber,
-                destinationArray: sdoData,
-                destinationIndex: 0,
-                length: numberOfBytes);
+            span.CopyTo(sdoData);
 
             return new SdoDataFrame(sdoData);
         }

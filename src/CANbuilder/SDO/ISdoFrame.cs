@@ -1,4 +1,4 @@
-﻿namespace CANbuilder
+﻿namespace CANbuilder.Sdo
 {
     public interface ISdoFrame
     {
