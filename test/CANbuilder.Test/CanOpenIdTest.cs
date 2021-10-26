@@ -7,11 +7,8 @@ namespace CANbuilder.Test
         [Fact]
         public void Create_TransmitSdo1()
         {
-            // ARRANGE
-            var canOpenId = new CANopenId();
-
             // ACT
-            var result = canOpenId.SetFunction(CANopen.Function.TransmitSdo1);
+            var result = CANopenIds.TransitSdo(0);
 
             // ASSERT
             Assert.Equal<ushort>(0x580, result.AsUShort());
@@ -22,11 +19,8 @@ namespace CANbuilder.Test
         [Fact]
         public void Create_ReceiveSdo1()
         {
-            // ARRANGE
-            var canOpenId = new CANopenId();
-
             // ACT
-            var result = canOpenId.SetFunction(CANopen.Function.ReceiveSdo1);
+            var result = CANopenIds.ReceiveSdo1(0);
 
             // ASSERT
             Assert.Equal<ushort>(0x600, result.AsUShort());

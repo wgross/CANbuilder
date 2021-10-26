@@ -16,8 +16,11 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0010_0000, result.AsByte);
+
             Assert.True(result.IsDownload);
             Assert.False(result.IsUpload);
+            Assert.False(result.IsAbort);
+
             Assert.False(result.IsExpedited);
             Assert.False(result.IsNumberOfFreeBytesValid);
             Assert.Equal(0, result.NumberOfFreeBytes);
@@ -34,10 +37,35 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0100_0000, result.AsByte);
+
             Assert.True(result.IsUpload);
             Assert.False(result.IsDownload);
+            Assert.False(result.IsAbort);
+
             Assert.False(result.IsExpedited);
             Assert.False(result.IsNumberOfFreeBytesValid);
+            Assert.Equal(0, result.NumberOfFreeBytes);
+        }
+
+        [Fact]
+        public void CommandByte_for_abort()
+        {
+            // ARRANGE
+            SdoCommandByte commandByte = default;
+
+            // ACT
+            var result = commandByte.Abort();
+
+            // ASSERT
+            Assert.Equal(0b_1000_0000, result.AsByte);
+
+            Assert.False(result.IsUpload);
+            Assert.False(result.IsDownload);
+            Assert.True(result.IsAbort);
+
+            Assert.False(result.IsExpedited);
+            Assert.False(result.IsNumberOfFreeBytesValid);
+
             Assert.Equal(0, result.NumberOfFreeBytes);
         }
 
@@ -52,8 +80,11 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0010_0000, result.AsByte);
+
             Assert.True(result.IsDownload);
             Assert.False(result.IsUpload);
+            Assert.False(result.IsAbort);
+
             Assert.False(result.IsExpedited);
             Assert.False(result.IsNumberOfFreeBytesValid);
             Assert.Equal(0, result.NumberOfFreeBytes);
@@ -70,8 +101,11 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0100_0000, result.AsByte);
+
             Assert.True(result.IsUpload);
             Assert.False(result.IsDownload);
+            Assert.False(result.IsAbort);
+
             Assert.False(result.IsExpedited);
             Assert.False(result.IsNumberOfFreeBytesValid);
             Assert.Equal(0, result.NumberOfFreeBytes);
@@ -88,8 +122,11 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0000_0011, result.AsByte);
+
             Assert.False(result.IsUpload);
             Assert.False(result.IsDownload);
+            Assert.False(result.IsAbort);
+
             Assert.True(result.IsExpedited);
             Assert.True(result.IsNumberOfFreeBytesValid);
             Assert.Equal(0, result.NumberOfFreeBytes);
@@ -106,8 +143,11 @@ namespace CANbuilder.Test
 
             // ASSERT
             Assert.Equal(0b_0000_0001, result.AsByte);
+
             Assert.False(result.IsUpload);
             Assert.False(result.IsDownload);
+            Assert.False(result.IsAbort);
+
             Assert.False(result.IsExpedited);
             Assert.True(result.IsNumberOfFreeBytesValid);
             Assert.Equal(0, result.NumberOfFreeBytes);
@@ -126,6 +166,8 @@ namespace CANbuilder.Test
             Assert.Equal(0b_0000_1011, result.AsByte);
             Assert.False(result.IsUpload);
             Assert.False(result.IsDownload);
+            Assert.False(result.IsAbort);
+
             Assert.True(result.IsExpedited);
             Assert.True(result.IsNumberOfFreeBytesValid);
             Assert.Equal(2, result.NumberOfFreeBytes);
@@ -147,3 +189,4 @@ namespace CANbuilder.Test
         }
     }
 }
+;

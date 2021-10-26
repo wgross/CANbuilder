@@ -33,6 +33,16 @@
         public bool IsUpload => (this.AsByte & 0b_0100_0000) == 0b_0100_0000;
 
         /// <summary>
+        /// Command Specifier is 8.
+        /// </summary>
+        public bool IsAbort => (this.AsByte & 0b_1000_0000) == 0b_1000_0000;
+
+        /// <summary>
+        /// Set  Command Specifier to 8 == Abort
+        /// </summary>
+        public SdoCommandByte Abort() => new((byte)((this.AsByte & 0b_0001_1111) | 0b_1000_0000));
+
+        /// <summary>
         /// Set Client Command Specifier to 1
         /// </summary>
         public SdoCommandByte Download() => new((byte)((this.AsByte & 0b_0001_1111) | 0b_0010_0000));
